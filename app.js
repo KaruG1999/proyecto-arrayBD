@@ -48,25 +48,50 @@ function addUserToArray(userObject) {
 function displayUsers() {
   usersContainer.innerHTML = '';
 
+  // evito mostrar tarjetas vacías o errores cuando el array usuarios no tiene elementos
   if (usuarios.length === 0) {
     usersContainer.innerHTML =
       '<div class="empty-state">No hay usuarios registrados</div>';
     return;
   }
 
+  // Itera sobre cada elemento del array usuarios
   usuarios.forEach(function (usuario) {
-    const userCard = document.createElement('div');
-    userCard.className = 'user-card';
-    userCard.innerHTML = `
-                    <div class="user-id">ID: ${usuario.id}</div>
-                    <div class="user-name">${usuario.nombre}</div>
-                    <div class="user-details">
-                        <div>Edad: ${usuario.edad} años</div>
-                        <div>Email: ${usuario.email}</div>
-                    </div>
-                `;
+    // Crear la tarjeta principal
+    const userCard = document.createElement('div');     // Crea un nuevo elemento <div> en el DOM.
+    userCard.classList.add('user-card');
+
+    // ID
+    const userId = document.createElement('div');
+    userId.classList.add('user-id');
+    userId.textContent = 'ID: ' + usuario.id;
+    userCard.appendChild(userId);     // appendChild() sirve para insertar elementos HTML en otros elementos, y lo hace al final de los hijos existentes
+
+    // Nombre
+    const userName = document.createElement('div');
+    userName.classList.add('user-name');        // aplicar estilos al elemento HTML usando clases CSS
+    userName.textContent = usuario.nombre;
+    userCard.appendChild(userName);
+
+    // Detalles
+    const userDetails = document.createElement('div');
+    userDetails.classList.add('user-details');
+
+    const userAge = document.createElement('div');
+    userAge.textContent = 'Edad: ' + usuario.edad + ' años';
+    userDetails.appendChild(userAge);
+
+    const userEmail = document.createElement('div');
+    userEmail.textContent = 'Email: ' + usuario.email;
+    userDetails.appendChild(userEmail);
+
+    // Agregar detalles a la tarjeta
+    userCard.appendChild(userDetails);
+
+    // Agregar la tarjeta al contenedor
     usersContainer.appendChild(userCard);
   });
+
 }
 
 // Funciones de Storage
@@ -77,15 +102,18 @@ function saveUserPreference(favoriteColor) {
   }
 }
 
+// Carga el mensaje de bienvenida al iniciar la página.
 function loadWelcomeMessage() {
   const savedColor = localStorage.getItem('favoriteColor');
   if (savedColor) {
-    welcomeMessage.textContent = `¡Hola! Tu color favorito es: ${savedColor}`;
+    welcomeMessage.textContent = `¡Hola! Tu color favorito es: ${savedColor}`; // Si hay un color favorito guardado en localStorage, lo muestra.
   } else {
-    welcomeMessage.textContent = '¡Bienvenido! Agrega tu primer usuario';
+    welcomeMessage.textContent = '¡Bienvenido! Agrega tu primer usuario';   // Si no hay color guardado, muestra un mensaje genérico.
   }
 }
 
+// Actualiza el mensaje de bienvenida si hay un color favorito guardado.
+// No hace nada si no hay color en localStorage.
 function updateWelcomeMessage() {
   const savedColor = localStorage.getItem('favoriteColor');
   if (savedColor) {
