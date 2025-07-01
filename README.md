@@ -1,31 +1,33 @@
-# 👩‍💻 Mini Proyecto: Simulador de Base de Datos de Usuarios
+# 👩‍💻 Proyecto: Gestión de Usuarios - 4ta Entrega
 
 ## 👥 Integrantes
-- **Karen Giannetto**  
+- **Karen Giannetto** 
 - **Cintia Alfaro** 
-- **Jessica Baeza**
+- **Jessica Baeza** 
 
 ## 🎯 Objetivo General
 Desarrollar una aplicación web utilizando **HTML, CSS y JavaScript** que:
-- Simule una base de datos con un array.
-- Permita agregar nuevos usuarios mediante un formulario.
-- Almacene datos en el navegador con **localStorage**.
-- Muestre toda la información en pantalla de forma clara y atractiva.
+- Capture, valide y almacene datos de usuarios de forma persistente.
+- Utilice localStorage para guardar toda la base de datos.
+- Lea y manipule datos desde estructura JSON.
+- Permita agregar nuevos usuarios con validación completa.
 
 ## ✅ Requisitos cumplidos
-- [x] **Array de usuarios** como base de datos simulada en `app.js`.
-- [x] **Visualización de usuarios** con `innerHTML` y/o `createElement()`.
-- [x] **Formulario funcional** para agregar usuarios con validaciones.
-- [x] **Uso de localStorage** para guardar un dato extra (color favorito).
-- [x] **Renderizado dinámico** de la lista de usuarios.
-- [x] **Mensaje de bienvenida** personalizado con datos almacenados.
+- [x] **Base de datos completa en localStorage** con `JSON.stringify()`.
+- [x] **Carga automática** desde Storage al iniciar la aplicación.
+- [x] **Estructura JSON** con array de objetos usuarios.
+- [x] **Validación de formulario**: nombre no vacío, email con "@", edad > 0.
+- [x] **Persistencia total** de datos entre sesiones.
+- [x] **Renderizado dinámico** con `createElement()`.
+- [x] **Mensaje personalizado** con color favorito (entrega anterior).
 
 ## 🧪 Resultado esperado
 Al cargar la página:
-- Se muestra un saludo personalizado con el color favorito del usuario.
-- Se lista el array inicial de usuarios.
-- El formulario permite agregar usuarios y actualiza la lista automáticamente.
+- Se recuperan y muestran todos los usuarios guardados.
+- El formulario valida datos antes de agregar usuarios.
+- Los nuevos usuarios se guardan automáticamente y persisten.
+- Se mantiene el saludo personalizado con color favorito.
 
 ---
 
-🍄 *Este proyecto fue realizado en el marco del curso Frontend para afianzar el manejo de DOM, eventos y almacenamiento local con JavaScript puro.*
+🍄 *Proyecto de la 4ta entrega del curso Frontend, evolucionando desde la base de la 3ra entrega con validación completa y persistencia total de datos.*

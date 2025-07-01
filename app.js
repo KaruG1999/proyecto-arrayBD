@@ -1,122 +1,193 @@
-// Ej Array de usuarios (simulo usuarios ingresados)
+// Base de datos simulada con estructura JSON  (vector de ejemplo)
 let usuarios = [
   { id: 1, nombre: 'Juan', edad: 25, email: 'juan@mail.com' },
   { id: 2, nombre: 'Ana', edad: 30, email: 'ana@mail.com' },
 ];
 
-// traigo el formulario y lo asigno a una constante para trabajar con el
-const form = document.getElementById('userForm');
-const usersContainer = document.getElementById('usersContainer');
-const welcomeMessage = document.getElementById('welcomeMessage');
+// Referencias a elementos del DOM
+const formulario = document.getElementById('userForm');
+const contenedorUsuarios = document.getElementById('usersContainer');
+const mensajeBienvenida = document.getElementById('welcomeMessage');
 
-// Cuando se envía el formulario, ejecuta la función que sigue
-form.addEventListener('submit', function (event) {
-  event.preventDefault(); // evita recarga pagina por defecto
-  let userFormData = new FormData(form); // contiene todos los datos que el usuario completó
-  let userObject = convertFormDataToUserObj(userFormData); // convierte el FormData en un objeto JavaScript
-  addUserToArray(userObject); // función que agrega el objeto del usuario a un array
-  saveUserPreference(userFormData.get('favoriteColor')); // función que guarda color en local Storage
-  displayUsers(); //  muestra en pantalla todos los usuarios que hay en el array
-  form.reset(); // Limpia el formulario
-});
-
-// Carga contenido al iniciar
+// carga datos desde localStorage si existen
 document.addEventListener('DOMContentLoaded', function () {
-  loadWelcomeMessage();
-  displayUsers();
+  cargarUsuariosDeStorage();
+  cargarMensajeBienvenida();
+  mostrarUsuarios();
 });
 
-// Funciones principales
-function convertFormDataToUserObj(userFormData) {
+// Evento del formulario
+formulario.addEventListener('submit', function (event) {
+  event.preventDefault(); // evita que el formulario se envíe y recargue la página
+
+  let datosFormulario = new FormData(formulario);
+
+  // Validar datos del formulario antes de procesarlos
+  if (!validarDatosFormulario(datosFormulario)) {
+    return; // Si la validación falla, no continuar
+  }
+
+  let objetoUsuario = convertirFormDataAObjetoUsuario(datosFormulario);
+  agregarUsuarioAlArray(objetoUsuario);
+  guardarUsuariosEnStorage(); // Guardar array completo en localStorage
+  guardarPreferenciaUsuario(datosFormulario.get('favoriteColor'));
+  mostrarUsuarios();
+  formulario.reset(); // Limpiar el formulario después de enviarlo
+
+  // Mostrar mensaje de éxito
+  mostrarMensajeExito('Usuario agregado correctamente');
+});
+
+// Funciones de Storage para toda la base de datos
+function guardarUsuariosEnStorage() {
+  localStorage.setItem('usuarios', JSON.stringify(usuarios));
+}
+
+function cargarUsuariosDeStorage() {
+  const datosGuardados = localStorage.getItem('usuarios');
+  if (datosGuardados) {
+    usuarios = JSON.parse(datosGuardados); // convierte el string JSON de vuelta a array
+  }
+}
+
+// Validación del formulario
+function validarDatosFormulario(datosFormulario) {
+  const nombre = datosFormulario.get('userName').trim(); //.trim() elimina los espacios en blanco al principio y al final de un string.
+  const email = datosFormulario.get('userEmail').trim();
+  const edad = parseInt(datosFormulario.get('userAge'));
+
+  // Validar que el nombre no esté vacío
+  if (nombre === '') {
+    mostrarMensajeError('El nombre no puede estar vacío');
+    return false;
+  }
+
+  // Validar que el email contenga un "@"
+  if (!email.includes('@')) {
+    mostrarMensajeError('El email debe contener un "@"');
+    return false;
+  }
+
+  // Validar que la edad sea un número mayor a 0
+  if (isNaN(edad) || edad <= 0) {
+    // isNan (is Not a Number): Evalúa si el valor NO es un número válido
+    mostrarMensajeError('La edad debe ser un número mayor a 0');
+    return false;
+  }
+
+  return true; // Si todas las validaciones pasan, se llega al final y se devuelve true
+}
+
+// Convertir FormData a objeto usuario
+function convertirFormDataAObjetoUsuario(datosFormulario) {
   return {
-    id: generateNewId(),
-    nombre: userFormData.get('userName'),
-    edad: parseInt(userFormData.get('userAge')),
-    email: userFormData.get('userEmail'),
+    id: generarNuevoId(),
+    nombre: datosFormulario.get('userName').trim(),
+    edad: parseInt(datosFormulario.get('userAge')),
+    email: datosFormulario.get('userEmail').trim(),
   };
 }
-// genera un nuevo ID numérico para un nuevo usuario
-function generateNewId() {
+
+// Generar nuevo ID único basado en el ID más alto actual
+function generarNuevoId() {
   return usuarios.length > 0 ? Math.max(...usuarios.map((u) => u.id)) + 1 : 1;
 }
 
-function addUserToArray(userObject) {
-  usuarios.push(userObject);
+// Agregar usuario al array
+function agregarUsuarioAlArray(objetoUsuario) {
+  usuarios.push(objetoUsuario);
 }
 
-// Mostrar usuarios en pantalla
-function displayUsers() {
-  usersContainer.innerHTML = '';
+//Mostrar usuarios desde Storage
+function mostrarUsuarios() {
+  contenedorUsuarios.innerHTML = '';
 
-  // evito mostrar tarjetas vacías o errores cuando el array usuarios no tiene elementos
   if (usuarios.length === 0) {
-    usersContainer.innerHTML =
+    contenedorUsuarios.innerHTML =
       '<div class="empty-state">No hay usuarios registrados</div>';
     return;
   }
 
-  // Itera sobre cada elemento del array usuarios
+  // Itera sobre cada usuario y crea su tarjeta visual
   usuarios.forEach(function (usuario) {
-    // Crear la tarjeta principal
-    const userCard = document.createElement('div');     // Crea un nuevo elemento <div> en el DOM.
-    userCard.classList.add('user-card');
-
-    // ID
-    const userId = document.createElement('div');
-    userId.classList.add('user-id');
-    userId.textContent = 'ID: ' + usuario.id;
-    userCard.appendChild(userId);     // appendChild() sirve para insertar elementos HTML en otros elementos, y lo hace al final de los hijos existentes
-
-    // Nombre
-    const userName = document.createElement('div');
-    userName.classList.add('user-name');        // aplicar estilos al elemento HTML usando clases CSS
-    userName.textContent = usuario.nombre;
-    userCard.appendChild(userName);
-
-    // Detalles
-    const userDetails = document.createElement('div');
-    userDetails.classList.add('user-details');
-
-    const userAge = document.createElement('div');
-    userAge.textContent = 'Edad: ' + usuario.edad + ' años';
-    userDetails.appendChild(userAge);
-
-    const userEmail = document.createElement('div');
-    userEmail.textContent = 'Email: ' + usuario.email;
-    userDetails.appendChild(userEmail);
-
-    // Agregar detalles a la tarjeta
-    userCard.appendChild(userDetails);
-
-    // Agregar la tarjeta al contenedor
-    usersContainer.appendChild(userCard);
+    const userCard = document.createElement('div');
+    userCard.className = 'user-card';
+    userCard.innerHTML = `
+                    <div class="user-id">ID: ${usuario.id}</div>
+                    <div class="user-name">${usuario.nombre}</div>
+                    <div class="user-details">
+                        <div>Edad: ${usuario.edad} años</div>
+                        <div>Email: ${usuario.email}</div>
+                    </div>
+                `;
+    contenedorUsuarios.appendChild(userCard);
   });
-
 }
 
-// Funciones de Storage
-function saveUserPreference(favoriteColor) {
-  if (favoriteColor && favoriteColor.trim() !== '') {
-    localStorage.setItem('favoriteColor', favoriteColor);
-    updateWelcomeMessage();
+// Funciones para el color favorito (mantenido de la entrega anterior)
+function guardarPreferenciaUsuario(colorFavorito) {
+  if (colorFavorito && colorFavorito.trim() !== '') {
+    localStorage.setItem('favoriteColor', colorFavorito);
+    actualizarMensajeBienvenida();
   }
 }
 
-// Carga el mensaje de bienvenida al iniciar la página.
-function loadWelcomeMessage() {
-  const savedColor = localStorage.getItem('favoriteColor');
-  if (savedColor) {
-    welcomeMessage.textContent = `¡Hola! Tu color favorito es: ${savedColor}`; // Si hay un color favorito guardado en localStorage, lo muestra.
+function cargarMensajeBienvenida() {
+  const colorGuardado = localStorage.getItem('favoriteColor');
+  if (colorGuardado) {
+    mensajeBienvenida.textContent = `¡Hola! Tu color favorito es: ${colorGuardado}`;
   } else {
-    welcomeMessage.textContent = '¡Bienvenido! Agrega tu primer usuario';   // Si no hay color guardado, muestra un mensaje genérico.
+    mensajeBienvenida.textContent = '¡Bienvenido! Agrega tu primer usuario';
   }
 }
 
-// Actualiza el mensaje de bienvenida si hay un color favorito guardado.
-// No hace nada si no hay color en localStorage.
-function updateWelcomeMessage() {
-  const savedColor = localStorage.getItem('favoriteColor');
-  if (savedColor) {
-    welcomeMessage.textContent = `¡Hola! Tu color favorito es: ${savedColor}`;
+function actualizarMensajeBienvenida() {
+  const colorGuardado = localStorage.getItem('favoriteColor');
+  if (colorGuardado) {
+    mensajeBienvenida.textContent = `¡Hola! Tu color favorito es: ${colorGuardado}`;
   }
 }
+
+// auxiliares para mostrar mensajes (crea mensaje, muestra, lo oculta)
+function mostrarMensajeError(mensaje) {
+  // Crear elemento de error si no existe
+  let divError = document.getElementById('errorMessage');
+  if (!divError) {
+    // si no existe un mensaje de error en html crea uno
+    divError = document.createElement('div'); // crea elemento 'div'
+    divError.id = 'errorMessage'; // le asigna un ID
+    divError.classList.add('error-message'); // agrego una clase css llamada "error-message"
+    formulario.insertBefore(divError, formulario.firstChild); // insertar al inicio del formulario
+  }
+
+  // muestra mensaje
+  divError.textContent = mensaje;
+  divError.style.display = 'block';
+
+  // Ocultar después de 3 segundos automaticamente
+  setTimeout(() => {
+    divError.style.display = 'none';
+  }, 3000);
+}
+
+// idem mensaje de exito (crea mensaje / lo muestra / lo oculta)
+function mostrarMensajeExito(mensaje) {
+  // Crear elemento de éxito si no existe
+  let divExito = document.getElementById('successMessage');
+  if (!divExito) {
+    divExito = document.createElement('div');
+    divExito.id = 'successMessage';
+    divExito.classList.add('success-message');
+    formulario.insertBefore(divExito, formulario.firstChild); // insertar al inicio del formulario
+  }
+
+  divExito.textContent = mensaje;
+  divExito.style.display = 'block';
+
+  // Ocultar después de 3 segundos automaticamente
+  setTimeout(() => {
+    divExito.style.display = 'none';
+  }, 3000);
+}
+
+// FALTA APIIIII
