@@ -100,6 +100,13 @@ function agregarUsuarioAlArray(objetoUsuario) {
   usuarios.push(objetoUsuario);
 }
 
+// Función para reordenar IDs después de eliminar un usuario
+function reordenarIds() {
+  usuarios.forEach((usuario, indice) => {
+    usuario.id = indice + 1; // Reasignar ID secuencial empezando desde 1
+  });
+}
+
 // Función para eliminar usuario del array y localStorage
 function eliminarUsuario(idUsuario) {
   // Buscar el índice del usuario con el ID específico
@@ -110,6 +117,9 @@ function eliminarUsuario(idUsuario) {
   if (indiceUsuario !== -1) {
     // Eliminar el usuario del array
     usuarios.splice(indiceUsuario, 1);
+
+    // Reordenar los IDs para mantener secuencia continua  (sino al eliminar un usuario, los IDs quedarían desordenados)
+    reordenarIds();
 
     // Guardar los cambios en localStorage
     guardarUsuariosEnStorage();
@@ -154,7 +164,7 @@ function mostrarUsuarios() {
     // Agregar información adicional de la API si existe
     if (usuario.emailValido !== null) {
       const estadoEmail = usuario.emailValido
-        ? '<span style="color: green;">✓ Email válido</span>' // span: contenedor para aplicar estilos
+        ? '<span style="color: #90ee90;">✓ Email válido</span>' // span: contenedor para aplicar estilos
         : '<span style="color: red;">✗ Email inválido</span>';
 
       let razonTexto = '';

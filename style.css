@@ -159,6 +159,125 @@ body {
   font-size: 0.95em;
 }
 
+/* Añado css para botones y mensajes añadidos con js */
+
+/* Estilos para mensajes de error y éxito */
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 12px 15px;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+  display: none;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px 15px;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+  display: none;
+}
+
+/* Botón de validar emails */
+.btn-validate {
+  width: 100%;
+  background: linear-gradient(45deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 20px;
+}
+
+.btn-validate:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(40, 167, 69, 0.25);
+}
+
+/* Botón de eliminar */
+.btn-delete {
+  background: linear-gradient(45deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 12px;
+  display: inline-block;
+}
+
+.btn-delete:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* Estado de email en las cards */
+.email-status {
+  margin-top: 8px;
+  padding: 6px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.85em;
+}
+
+.email-status span {
+  font-weight: 500;
+}
+
+.email-status small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8em;
+  opacity: 0.8;
+}
+
+/* Mejoras para las cards de usuario */
+.user-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-details {
+  font-size: 0.9em;
+  opacity: 0.9;
+  line-height: 1.4;
+  margin-bottom: 5px;
+}
+
+/* Contenedor de acciones en la card */
+.user-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+
+
+
+
 /* TABLET - min-width: 768px */
 @media (min-width: 768px) {
   body {
@@ -213,6 +332,55 @@ body {
     transform: translateY(-1px);
     box-shadow: 0 8px 20px rgba(255, 107, 107, 0.25);
   }
+
+.error-message,
+  .success-message {
+    padding: 14px 18px;
+    font-size: 0.95em;
+    border-radius: 10px;
+  }
+
+  .btn-validate {
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 1.05em;
+  }
+
+  .btn-validate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+  }
+
+  .btn-delete {
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 0.95em;
+  }
+
+  .btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(220, 53, 69, 0.35);
+  }
+
+  .email-status {
+    font-size: 0.9em;
+    margin-top: 10px;
+    padding: 8px 0;
+  }
+
+  .user-card {
+    padding: 18px;
+    gap: 10px;
+  }
+
+  .user-actions {
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+
+
 }
 
 /* DESKTOP - min-width: 1024px */
@@ -297,4 +465,52 @@ body {
   .empty-state {
     padding: 40px;
   }
+
+  /* elementos agregados con js */
+.error-message,
+  .success-message {
+    padding: 16px 20px;
+    font-size: 1em;
+    border-radius: 12px;
+  }
+
+  .btn-validate {
+    padding: 18px;
+    border-radius: 12px;
+    font-size: 1.1em;
+  }
+
+  .btn-validate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(40, 167, 69, 0.35);
+  }
+
+  .btn-delete {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 1em;
+  }
+
+  .btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+  }
+
+  .email-status {
+    font-size: 0.95em;
+    margin-top: 12px;
+    padding: 10px 0;
+  }
+
+  .user-card {
+    padding: 20px;
+    gap: 12px;
+  }
+
+  .user-actions {
+    gap: 15px;
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
 }
