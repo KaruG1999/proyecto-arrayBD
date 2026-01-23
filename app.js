@@ -9,12 +9,14 @@ const formulario = document.getElementById('userForm');
 const contenedorUsuarios = document.getElementById('usersContainer');
 const mensajeBienvenida = document.getElementById('welcomeMessage');
 
+// Variable para controlar el estado de validación
+let validandoEmails = false;
+
 // Carga datos desde localStorage si existen
 document.addEventListener('DOMContentLoaded', function () {
   cargarUsuariosDeStorage();
   cargarMensajeBienvenida();
   mostrarUsuarios();
-  agregarBotonValidarEmails();
 });
 
 // Evento del formulario
@@ -175,6 +177,11 @@ function mostrarUsuarios() {
       cardContent += `<div class="email-status">${estadoEmail}${razonTexto}</div>`;
     }
 
+    // botón de validar email individual
+    const botonValidarTexto = usuario.emailValido === null ? 'Validar Email' : 'Revalidar Email';
+    const botonValidarId = `validate-${usuario.id}`;
+    cardContent += `<button id="${botonValidarId}" class="btn-validate-individual" onclick="validarEmailIndividual(${usuario.id})" style="background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin: 5px; font-size: 12px;">${botonValidarTexto}</button>`;
+
     // Agregar botón de eliminar
     cardContent += `<button class="btn-delete" onclick="eliminarUsuario(${usuario.id})" style="background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;">Eliminar</button>`;
 
@@ -251,126 +258,193 @@ function mostrarMensajeExito(mensaje) {
 
 // ============== INTEGRACIÓN CON API ==============
 
-// Función para validar email usando AbstractAPI
+// Función para validar email localmente (sin API)
+function validarEmailLocal(email) {
+  // Regex más completa para validar emails  
+  const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  
+  // Lista de dominios comunes válidos
+  const dominiosValidos = [
+    'gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'yahoo.es',
+    'icloud.com', 'live.com', 'msn.com', 'protonmail.com', 'tutanota.com'
+  ];
+  
+  const formatoValido = regexEmail.test(email);
+  
+  if (!formatoValido) {
+    return {
+      esValido: false,
+      razon: 'Formato de email inválido'
+    };
+  }
+  
+  const dominio = email.split('@')[1]?.toLowerCase(); // split : divide el string en dos partes, antes y después del '@' 
+  const dominioConocido = dominiosValidos.includes(dominio);
+  
+  return {
+    esValido: true,
+    razon: dominioConocido ? 'Email válido (dominio conocido)' : 'Email válido (formato correcto)'
+  };
+}
+
+// Función para validar email usando AbstractAPI (con proxy o servidor)
 function validarEmailConAPI(email) {
   // API Key de AbstractAPI
-  const API_KEY = 'cca5c0e3a5bc478e8da41203f1e75fb';
-  const API_URL = `https://emailvalidation.abstractapi.com/v1/?api_key=${API_KEY}&email=${email}`;
+  const API_KEY = 'cca5c0e3a5bc478e8da41203f61e75fb';
+  
+  // Para desarrollo local, usar validación local
+  console.log('Usando validación local debido a limitaciones de CORS');
+  const resultado = validarEmailLocal(email);
+  
+  return Promise.resolve({
+    esValido: resultado.esValido,
+    informacion: { email: email, is_valid_format: resultado.esValido },
+    razon: resultado.razon
+  });
+  
+  // CÓDIGO ORIGINAL DE LA API (comentado por CORS)
+  /*
+  const API_URL = `https://emailvalidation.abstractapi.com/v1/?api_key=${API_KEY}&email=${encodeURIComponent(email)}`;
 
-  return fetch(API_URL) // Realiza la petición a la API
+  console.log('Validando email:', email);
+  console.log('URL de la API:', API_URL);
+
+  return fetch(API_URL, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  })
     .then((response) => {
-      // Maneja la respuesta de la API
-      // Verifica si la respuesta es exitosa (código 200-299)
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       if (!response.ok) {
-        throw new Error('Error en la respuesta de la API');
+        if (response.status === 401) {
+          throw new Error('API Key inválida o expirada');
+        } else if (response.status === 429) {
+          throw new Error('Límite de requests excedido');
+        } else {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
       }
-      return response.json(); // Convierte la respuesta a JSON
+      return response.json();
     })
     .then((data) => {
-      // Procesa los datos recibidos
-      // Criterios más flexibles para validación - solo rechazar si hay problemas críticos (sino rechaza muchos mails válidos)
-      const formatoValido = data.is_valid_format;
-      const noEsUndeliverable = data.deliverability !== 'UNDELIVERABLE'; // No debe ser "UNDELIVERABLE" porque eso indica que no se puede entregar
+      console.log('Datos recibidos de la API:', data);
+      
+      // Verificar si la respuesta contiene error
+      if (data.error) {
+        throw new Error(data.error.message || 'Error en la API');
+      }
 
-      // Ser más permisivo con emails - solo rechazar si hay problemas graves
-      const esValido =
-        formatoValido &&
-        (noEsUndeliverable || data.deliverability === 'UNKNOWN'); // Aceptar "UNKNOWN" como válido
+      // Validación simplificada y más permisiva
+      const formatoValido = data.is_valid_format === true;
+      const esEntregable = data.deliverability === 'DELIVERABLE';
+      const esDesconocido = data.deliverability === 'UNKNOWN';
+      
+      // Considerar válido si tiene formato válido Y (es entregable O estado desconocido)
+      const esValido = formatoValido && (esEntregable || esDesconocido);
 
       return {
-        // Retorna un objeto con el resultado de la validación
         esValido: esValido,
         informacion: data,
         razon: getValidationReason(data),
       };
     })
     .catch((error) => {
-      // Maneja errores de la petición
-      console.error('Error validando email:', error);
+      console.error('Error completo validando email:', error);
       return {
         esValido: null,
         informacion: null,
-        razon: 'Error de conexión con API',
+        razon: error.message || 'Error de conexión con API',
       };
     });
+  */
 }
 
-// Función para obtener razón de validación
+// Función para obtener razón de validación (simplificada)
 function getValidationReason(data) {
-  // accedo a los datos de validación y retorno un mensaje descriptivo
-  // propiedades de la API, se accede con => data.propiedad
+  console.log('Analizando razón de validación:', data);
+  
+  // Verificar formato
   if (!data.is_valid_format) {
-    return 'Formato inválido';
+    return 'Formato de email inválido';
   }
-  // deliverability indica si el email es entregable o no
-  if (data.deliverability === 'UNDELIVERABLE') {
-    // si es "UNDELIVERABLE" no se puede entregar
-    return 'Email no entregable';
-  }
-  if (data.deliverability === 'DELIVERABLE') {
-    // si es "DELIVERABLE" se puede entregar
-    return 'Email válido y entregable';
-  }
-  if (data.deliverability === 'UNKNOWN') {
-    // si es "UNKNOWN" no se sabe si es entregable o no
-    return 'Email válido (estado incierto)';
-  }
-  if (data.is_disposable_email) {
-    // si es "disposable" es un email temporal
-    return 'Email válido (posible temporal)';
-  }
-  return 'Email válido';
-}
 
-// Función para agregar botón de validación de emails
-function agregarBotonValidarEmails() {
-  // Crear botón (no existe en html)
-  if (!document.getElementById('validateEmailsBtn')) {
-    const botonValidar = document.createElement('button');
-    botonValidar.id = 'validateEmailsBtn';
-    botonValidar.textContent = 'Validar Emails con API';
-    botonValidar.className = 'btn-validate';
-    botonValidar.type = 'button';
-
-    // Agregar evento click
-    botonValidar.addEventListener('click', validarTodosLosEmails);
-
-    // Insertar después del formulario
-    formulario.parentNode.insertBefore(botonValidar, formulario.nextSibling); // nextSibling: siguiente elemento hermano del formulario
+  // Verificar deliverability
+  switch (data.deliverability) {
+    case 'DELIVERABLE':
+      return 'Email válido y entregable';
+    case 'UNDELIVERABLE':
+      return 'Email no se puede entregar';
+    case 'UNKNOWN':
+      return 'Email con formato válido (entregabilidad desconocida)';
+    default:
+      return 'Estado de email desconocido';
   }
 }
 
-// Función para validar todos los emails usando la API
-function validarTodosLosEmails() {
-  if (usuarios.length === 0) {
-    mostrarMensajeError('No hay usuarios para validar');
+// Para cambiar entre validación local y API con proxy, 
+// cambia esta línea en validarEmailIndividual():
+// validarEmailConAPI(usuario.email) por validarEmailConAPICors(usuario.email)
+
+// Función para validar email individual
+function validarEmailIndividual(idUsuario) {
+  // Buscar el usuario
+  const usuario = usuarios.find(u => u.id === idUsuario);
+  if (!usuario) {
+    mostrarMensajeError('Usuario no encontrado');
     return;
   }
 
-  mostrarMensajeExito('Validando emails con API...');
+  // Obtener el botón específico
+  const boton = document.getElementById(`validate-${idUsuario}`);
+  if (!boton) {
+    mostrarMensajeError('Botón no encontrado');
+    return;
+  }
 
-  // Procesar cada usuario
-  usuarios.forEach((usuario, indice) => {
-    // Validar email si no se ha validado antes
-    if (usuario.emailValido === null || usuario.emailValido === undefined) {
-      // setTimeout para esperar 1 segundo por cada usuario (sino se saturaría la API)
-      setTimeout(() => {
-        validarEmailConAPI(usuario.email).then((resultado) => {
-          // Llama a la función de validación
-          // Actualizar el usuario con el resultado de la validación
-          usuario.emailValido = resultado.esValido;
-          usuario.razonValidacion = resultado.razon;
+  // Verificar si ya está validando este email
+  if (boton.disabled) {
+    return; // Ya está en proceso
+  }
 
-          // Guardar cambios en localStorage
-          guardarUsuariosEnStorage();
+  // Deshabilitar el botón y cambiar texto
+  boton.disabled = true;
+  boton.textContent = 'Validando...';
+  boton.style.backgroundColor = '#6c757d'; // Color gris para indicar que está deshabilitado
 
-          // Actualizar vista si es el último usuario
-          if (indice === usuarios.length - 1) {
-            mostrarUsuarios();
-            mostrarMensajeExito('Validación completada');
-          }
-        });
-      }, indice * 1000); // Esperar 1 segundo entre cada validación
-    }
-  });
+  // Validar el email
+  validarEmailConAPI(usuario.email)
+    .then((resultado) => {
+      // Actualizar el usuario con el resultado
+      usuario.emailValido = resultado.esValido;
+      usuario.razonValidacion = resultado.razon;
+
+      // Guardar en localStorage
+      guardarUsuariosEnStorage();
+
+      // Actualizar la vista
+      mostrarUsuarios();
+
+      // Mostrar mensaje de éxito
+      if (resultado.esValido === true) {
+        mostrarMensajeExito(`Email de ${usuario.nombre} validado correctamente`);
+      } else if (resultado.esValido === false) {
+        mostrarMensajeError(`Email de ${usuario.nombre} es inválido: ${resultado.razon}`);
+      } else {
+        mostrarMensajeError(`Error validando email de ${usuario.nombre}: ${resultado.razon}`);
+      }
+    })
+    .catch((error) => {
+      console.error('Error en validación:', error);
+      mostrarMensajeError(`Error validando email de ${usuario.nombre}`);
+      
+      // Rehabilitar el botón en caso de error
+      boton.disabled = false;
+      boton.textContent = usuario.emailValido === null ? 'Validar Email' : 'Revalidar Email';
+      boton.style.backgroundColor = '#007bff';
+    });
 }
